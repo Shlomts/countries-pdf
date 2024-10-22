@@ -8,42 +8,33 @@ let doc = new PDFDocument({ margin: 30, size: "A4" })
 // connect to a write stream
 doc.pipe(fs.createWriteStream("./countries.pdf"))
 
-createPdf(doc).then(() => doc.end()) // close document
+createPdf().then(() => doc.end()) // close document
 
 function getCountries() {
-    return new Promise((resolve, reject) => {
-        utilService.readJsonFile("countries.json").then(countriesArr => {
-            if (!countriesArr) reject(err)
-            let sorted = countriesArr.sort((a, b) => {
-                const x = a.name.common
-                const y = b.name.common
-                return x < y ? -1 : x > y ? 1 : 0
-            })
-            resolve(sorted)
+    return utilService.readJsonFile("countries.json").then((countriesArr) =>
+        countriesArr.sort((a, b) => {
+            const x = a.name.common
+            const y = b.name.common
+            return x < y ? -1 : x > y ? 1 : 0
         })
-    })
+    )
 }
 
 function createPdf() {
-    return new Promise((resolve, reject) => {
-        getCountries().then(countries => {
-            if (!countries) reject(err)
-            const table = {
-                title: "Countries",
-                subtitle: "Sorted by name",
-                headers: ["Country", "Capital", "Population"],
-                rows: [],
-            }
+    return getCountries().then((countries) => {
+        const table = {
+            title: "Countries",
+            subtitle: "Sorted by name",
+            headers: ["Country", "Capital", "Population"],
+            rows: [],
+        }
 
-            for (let i = 0; i < countries.length; i++) {
-                table.rows.push([
-                    countries[i].name.common,
-                    countries[i].capital,
-                    countries[i].population,
-                ])
-            }
+        table.rows = countries.map((country) => [
+            country.name.common,
+            country.capital ? country.capital[0] : " ",
+            country.population,
+        ])
 
-            resolve(doc.table(table, { columnsSize: [200, 100, 100] }))
-        })
+        return doc.table(table, { columnsSize: [200, 100, 100] })
     })
 }
