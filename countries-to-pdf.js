@@ -19,7 +19,6 @@ function getCountries() {
                 const y = b.name.common
                 return x < y ? -1 : x > y ? 1 : 0
             })
-
             resolve(sorted)
         })
     })
